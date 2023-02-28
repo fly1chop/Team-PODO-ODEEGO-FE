@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
 import { atom } from "recoil";
-
 export interface ModalProps {
   children: ReactNode;
   btnText?: {

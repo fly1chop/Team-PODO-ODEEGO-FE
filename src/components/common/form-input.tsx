@@ -7,7 +7,7 @@ import { COLORS } from "@/constants/css";
 interface AddressFormInputProps {
   index: number;
   address: string;
-  placeholder: string;
+  placeholder?: string;
   onClick: () => void;
   onRemove?: (e: MouseEvent<HTMLButtonElement>, index: number) => void;
 }
