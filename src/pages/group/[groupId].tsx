@@ -1,13 +1,25 @@
 import FormInput from "@/components/common/form-input";
 import Header from "@/components/layout/header";
 import Main from "@/components/layout/main";
+import { COLORS } from "@/constants/css";
+import useModal from "@/hooks/use-modal";
+import { isFirstVisitState } from "@/recoil/first-visit-state";
 import { GroupDetailResponse } from "@/types/api/group";
 import styled from "@emotion/styled";
-import { Button, CircularProgress, Container, Stack } from "@mui/material";
+import { Refresh, InsertLink } from "@mui/icons-material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  IconButton,
+  Stack,
+} from "@mui/material";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { useRouter } from "next/router";
 import { MouseEvent, useCallback, useEffect, useState } from "react";
 import { toast, Toaster } from "react-hot-toast";
+import { useRecoilState } from "recoil";
 
 interface InputState {
   username: string;
@@ -22,8 +34,9 @@ const GroupPage = ({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [inputs, setInputs] = useState<InputState[]>();
-  const { capacity, remainingTime, participants, owner } = data;
-  console.log(capacity, remainingTime, participants, owner);
+  const { openModal } = useModal();
+  const [isFirstVisit, setIsFirstVisit] = useRecoilState(isFirstVisitState);
+  const { capacity, participants, owner } = data;
 
   const getInputsByParticipant = useCallback(() => {
     if (participants && participants.length > 0) {
@@ -58,9 +71,57 @@ const GroupPage = ({
     });
   };
 
+  const linkModalContent = useCallback(() => {
+    const handleCopy = () => {
+      navigator.clipboard.writeText(`/search/${router.query.groupId}`);
+    };
+
+    return (
+      <div>
+        <p>링크를 공유해서 주소를 입력받으세요</p>
+        <FormInput
+          index={0}
+          address={`/search/${router.query.groupId}`}
+          onClick={handleCopy}
+        />
+      </div>
+    );
+  }, [router.query.groupId]);
+
+  const openLinkModal = useCallback(() => {
+    openModal({
+      children: linkModalContent(),
+      handleClose: () => {
+        setIsFirstVisit(false);
+      },
+    });
+  }, [linkModalContent, openModal, setIsFirstVisit]);
+
+  useEffect(() => {
+    if (isFirstVisit) openLinkModal();
+  }, [isFirstVisit, openLinkModal]);
+
+  const handleLink = () => {
+    openLinkModal();
+  };
+
+  const handleRefresh = () => {
+    // TODO: fetch 모임 상세 정보 api
+    getInputsByParticipant();
+  };
+
   const handleCancel = () => {
-    // **TODO: 모임 삭제 api 호출
-    router.push("/");
+    openModal({
+      children: <p>정말로 삭제하시겠습니까?</p>,
+      btnText: {
+        confirm: "계속",
+        close: "취소",
+      },
+      handleConfirm: () => {
+        router.push("/");
+        setIsFirstVisit(null);
+      },
+    });
   };
 
   const handleSearch = async (e: MouseEvent<HTMLButtonElement>) => {
@@ -89,12 +150,24 @@ const GroupPage = ({
             overflow: "auto",
             paddingBottom: "2rem",
           }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: "1rem",
+            }}>
+            <CustomIconButton>
+              <InsertLink onClick={handleLink} />
+            </CustomIconButton>
+            <CustomIconButton>
+              <Refresh onClick={handleRefresh} />
+            </CustomIconButton>
+          </Box>
           <form>
             <Stack spacing={1.5}>
               {inputs &&
                 inputs.map(({ username, stationName }, index) => (
                   <div key={index}>
-                    {/* TODO: 이슈 #20 머지되면 /components/home/form-input 교체 */}
                     <FormInput
                       index={index}
                       address={stationName}
@@ -145,6 +218,14 @@ const CustomButton = styled(Button)`
   font-size: 1.3rem;
 `;
 
+const CustomIconButton = styled(IconButton)`
+  color: ${COLORS.altGreen};
+
+  > svg {
+    font-size: 2rem;
+  }
+`;
+
 export const getServerSideProps = async ({
   params,
 }: GetServerSidePropsContext) => {
@@ -162,7 +243,6 @@ export const getServerSideProps = async ({
   );
 
   const data: GroupDetailResponse = await res.json();
-  console.log(data);
 
   // Redirect home if no data
   if (!data) {

@@ -2,12 +2,15 @@ import AddressForm from "@/components/home/address-form";
 import Header from "@/components/layout/header";
 import Main from "@/components/layout/main";
 import useModal from "@/hooks/use-modal";
+import { isFirstVisitState } from "@/recoil/first-visit-state";
 import { Button } from "@mui/material";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useSetRecoilState } from "recoil";
 
 export default function Home() {
   // useModal 훅 사용 예시입니다. 작업할땐 삭제해주세요. (line 9 - line 39)
+  const setIsFirstVisit = useSetRecoilState(isFirstVisitState);
   const { openModal } = useModal();
   const router = useRouter();
 
@@ -34,7 +37,8 @@ export default function Home() {
       },
       handleConfirm: async () => {
         await sleep(1000);
-        router.push("/search");
+        setIsFirstVisit(true);
+        router.push(`/group/${3}`);
       },
     });
   };
@@ -47,8 +51,7 @@ export default function Home() {
       <Main text={MAIN_TEXT}>
         <AddressForm />
       </Main>
-      <Link href='/group/3'>Go to Room</Link>
-      <Button onClick={handleOpenModal}>Open Modal</Button>
+      <Button onClick={handleOpenModal}>Make Group</Button>
       <div>
         <Link href='/search'>search</Link>
       </div>
