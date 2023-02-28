@@ -2,7 +2,14 @@ import { COLORS } from "@/constants/css";
 import useModal from "@/hooks/use-modal";
 import { ModalProps, modalState } from "@/recoil/modal-state";
 import styled from "@emotion/styled";
-import { Modal, Backdrop, Button } from "@mui/material";
+import Close from "@mui/icons-material/Close";
+import {
+  Modal,
+  Backdrop,
+  Button,
+  IconButton,
+  IconButtonProps,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
 
@@ -27,9 +34,7 @@ const _Modal = ({
 
   const close = () => {
     setShow(false);
-    setTimeout(() => {
-      closeModal();
-    }, 500);
+    closeModal();
   };
 
   const onConfirm = async () => {
@@ -47,7 +52,7 @@ const _Modal = ({
       aria-labelledby='transition-modal-title'
       aria-describedby='transition-modal-description'
       open={show}
-      onClose={close}
+      onClose={onCancel}
       slots={{ backdrop: Backdrop }}
       closeAfterTransition
       slotProps={{
@@ -73,6 +78,11 @@ const _Modal = ({
             </FlexContainer>
           ) : null}
         </FlexContainer>
+        {btnText && !btnText.close && (
+          <CloseButton aria-label='close'>
+            <Close onClick={onCancel} />
+          </CloseButton>
+        )}
       </Box>
     </Modal>
   );
@@ -102,4 +112,12 @@ const Box = styled.div`
   box-sizing: border-box;
   background-color: ${COLORS.backgroundPrimary};
   border-radius: 0.8rem;
+`;
+
+const CloseButton = styled(IconButton)<IconButtonProps>`
+  position: absolute;
+  top: -2rem;
+  right: 0;
+  padding: 0;
+  color: ${COLORS.backgroundSecondary};
 `;
