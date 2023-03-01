@@ -115,8 +115,8 @@ const GroupPage = () => {
   }, [linkModalContent, openModal, setIsFirstVisit]);
 
   useEffect(() => {
-    if (isFirstVisit) openLinkModal();
-  }, [isFirstVisit, openLinkModal]);
+    if (!isLoading && !isError && isFirstVisit) openLinkModal();
+  }, [isFirstVisit, openLinkModal, isError, isLoading]);
 
   const handleLink = () => {
     openLinkModal();
