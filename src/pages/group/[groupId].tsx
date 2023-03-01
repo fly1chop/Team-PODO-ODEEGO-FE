@@ -20,7 +20,7 @@ import { toast, Toaster } from "react-hot-toast";
 import { useRecoilState } from "recoil";
 import { tokenRecoilState } from "@/recoil/token-recoil";
 import { useRecoilValue } from "recoil";
-import { useGroup } from "../api/group";
+import { fetchGroup, useGroup } from "../api/group";
 
 interface InputState {
   memberId: string;
@@ -34,8 +34,8 @@ const GroupPage = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inputs, setInputs] = useState<InputState[]>();
-  const { openModal } = useModal();
   const [isFirstVisit, setIsFirstVisit] = useRecoilState(isFirstVisitState);
+  const { openModal } = useModal();
   const token = useRecoilValue(tokenRecoilState);
   const { groupId } = router.query;
   const { data, isLoading, isError } = useGroup(
@@ -89,8 +89,10 @@ const GroupPage = () => {
   };
 
   const linkModalContent = useCallback(() => {
-    const handleCopy = () => {
-      navigator.clipboard.writeText(`/search/${router.query.groupId}`);
+    const handleCopy = async () => {
+      await navigator.clipboard.writeText(
+        `/search?groupdId=${router.query.groupId}`
+      );
     };
 
     return (
@@ -122,9 +124,12 @@ const GroupPage = () => {
     openLinkModal();
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     // TODO: fetch 모임 상세 정보 api
+    setIsSubmitting(true);
+    await fetchGroup(groupId as string, token as string);
     getInputsByParticipant();
+    setIsSubmitting(false);
   };
 
   const handleCancel = () => {
@@ -135,8 +140,8 @@ const GroupPage = () => {
         close: "취소",
       },
       handleConfirm: () => {
-        router.push("/");
         setIsFirstVisit(null);
+        router.push("/");
       },
     });
   };
@@ -160,7 +165,8 @@ const GroupPage = () => {
   };
 
   if (isError) {
-    return <p>There was an Error</p>;
+    toast.error("페이지 호출하는데 문제가 생겼어요...");
+    router.push("/");
   }
 
   return (
@@ -186,9 +192,18 @@ const GroupPage = () => {
               <Refresh />
             </CustomIconButton>
           </Box>
-          {isLoading && (
+          {(isSubmitting || isLoading) && (
             <Box
-              sx={{ display: "flex", width: "100%", justifyContent: "center" }}>
+              sx={{
+                display: "flex",
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+                width: "100%",
+                justifyContent: "center",
+                zIndex: "1000",
+              }}>
               <CircularProgress />
             </Box>
           )}
@@ -223,11 +238,7 @@ const GroupPage = () => {
                 size='large'
                 type='submit'
                 onClick={handleSearch}>
-                {isSubmitting ? (
-                  <CircularProgress size='2rem' />
-                ) : (
-                  "중간지점 찾기"
-                )}
+                중간지점 찾기
               </CustomButton>
             </Stack>
           </form>

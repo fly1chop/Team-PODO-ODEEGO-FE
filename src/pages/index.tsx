@@ -38,7 +38,7 @@ export default function Home() {
       handleConfirm: async () => {
         await sleep(1000);
         setIsFirstVisit(true);
-        router.push(`/group/${3}`);
+        router.push(`/group/bb644fe4-8f34-4775-882a-c1d2ee01f322`);
       },
     });
   };
@@ -52,7 +52,7 @@ export default function Home() {
         <AddressForm />
       </Main>
       <Link href='/group/bb644fe4-8f34-4775-882a-c1d2ee01f322'>TEST GROUP</Link>
-      <Button onClick={handleOpenModal}>Open Modal</Button>
+      <Button onClick={handleOpenModal}>Make Group (FAKE)</Button>
       <div>
         <Link href='/search'>search</Link>
       </div>

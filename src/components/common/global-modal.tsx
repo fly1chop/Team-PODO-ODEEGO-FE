@@ -78,9 +78,9 @@ const _Modal = ({
             </FlexContainer>
           ) : null}
         </FlexContainer>
-        {btnText && !btnText.close && (
-          <CloseButton aria-label='close'>
-            <Close onClick={onCancel} />
+        {!btnText?.close && (
+          <CloseButton aria-label='close' onClick={onCancel}>
+            <Close />
           </CloseButton>
         )}
       </Box>

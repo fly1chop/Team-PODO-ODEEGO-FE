@@ -46,7 +46,7 @@ const FormInput = ({
             top: "1.3rem",
             opacity: 0.3,
           }}
-          onClick={(e) => onRemove && onRemove(e, index)}>
+          onClick={(e) => onRemove(e, index)}>
           <ClearIcon />
         </IconButton>
       )}
