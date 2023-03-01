@@ -37,14 +37,13 @@ const createGroup = async (memberId: string, capacity: number) => {
 
 const deleteGroup = async (groupId: string, token: string) => {
   try {
-    await axios.delete(
-      `${process.env.NEXT_PUBLIC_API_ENDPOINT}/groups/${groupId}`,
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
-    );
+    await axios.delete(`http://52.78.224.123:8080/api/test/groups/${groupId}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(token);
   } catch (error) {
     throw error;
   }

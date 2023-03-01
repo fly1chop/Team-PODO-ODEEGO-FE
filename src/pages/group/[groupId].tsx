@@ -37,11 +37,8 @@ const GroupPage = () => {
   const [isFirstVisit, setIsFirstVisit] = useRecoilState(isFirstVisitState);
   const { openModal } = useModal();
   const token = useRecoilValue(tokenRecoilState);
-  const { groupId } = router.query;
-  const { data, isLoading, isError, isFetching } = useGroup(
-    groupId as string,
-    token as string
-  );
+  const groupId = router.query.groupId as string;
+  const { data, isLoading, isError, isFetching } = useGroup(groupId, token);
 
   const getInputsByParticipant = useCallback(() => {
     if (!data) return;
@@ -128,7 +125,7 @@ const GroupPage = () => {
   const handleRefresh = async () => {
     // TODO: fetch 모임 상세 정보 api
     setIsSubmitting(true);
-    await fetchGroup(groupId as string, token as string);
+    await fetchGroup(groupId, token);
     getInputsByParticipant();
     setIsSubmitting(false);
   };
@@ -141,6 +138,7 @@ const GroupPage = () => {
         close: "취소",
       },
       handleConfirm: () => {
+        // deleteGroup(groupId, token);
         setIsFirstVisit(null);
         router.push("/");
       },
@@ -159,7 +157,7 @@ const GroupPage = () => {
 
     setIsSubmitting(true);
     // **TODO: 중간지점 찾기 api 호출
-    // **TODO: 모임 삭제 api 호출
+    // deleteGroup(groupId, token);
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
     await sleep(1000);
     setIsSubmitting(false);
