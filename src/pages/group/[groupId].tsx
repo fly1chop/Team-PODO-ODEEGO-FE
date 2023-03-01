@@ -4,7 +4,6 @@ import Main from "@/components/layout/main";
 import { COLORS } from "@/constants/css";
 import useModal from "@/hooks/use-modal";
 import { isFirstVisitState } from "@/recoil/first-visit-state";
-import { GroupDetailResponse } from "@/types/api/group";
 import styled from "@emotion/styled";
 import { Refresh, InsertLink } from "@mui/icons-material";
 import {
@@ -15,38 +14,53 @@ import {
   IconButton,
   Stack,
 } from "@mui/material";
-import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { useRouter } from "next/router";
 import { MouseEvent, useCallback, useEffect, useState } from "react";
 import { toast, Toaster } from "react-hot-toast";
 import { useRecoilState } from "recoil";
+import { tokenRecoilState } from "@/recoil/token-recoil";
+import { useRecoilValue } from "recoil";
+import { useGroup } from "../api/group";
 
 interface InputState {
-  username: string;
+  memberId: string;
+  nickname: string;
   stationName: string;
   lat: number;
   lng: number;
 }
 
-const GroupPage = ({
-  data,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+const GroupPage = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [inputs, setInputs] = useState<InputState[]>();
   const { openModal } = useModal();
   const [isFirstVisit, setIsFirstVisit] = useRecoilState(isFirstVisitState);
-  const { capacity, participants, owner } = data;
+  const token = useRecoilValue(tokenRecoilState);
+  const { groupId } = router.query;
+  const { data, isLoading, isError } = useGroup(
+    groupId as string,
+    token as string
+  );
 
   const getInputsByParticipant = useCallback(() => {
+    if (!data) return;
+    const { participants, capacity } = data;
     if (participants && participants.length > 0) {
-      const inputsByParticipants = participants.map(({ username, start }) => {
-        const { stationName, lat, lng } = start;
-        return { username, stationName, lat, lng };
-      });
+      const inputsByParticipants = participants.map(
+        ({ memberId, nickname, start }) => {
+          const { stationName, lat, lng } = start;
+          return { memberId, nickname, stationName, lat, lng };
+        }
+      );
       return Array.from(
         { length: capacity },
-        (_, i) => inputsByParticipants[i] ?? { username: "", stationName: "" }
+        (_, i) =>
+          inputsByParticipants[i] ?? {
+            memberId: "",
+            nickname: "",
+            stationName: "",
+          }
       );
     }
 
@@ -54,19 +68,22 @@ const GroupPage = ({
       username: "",
       stationName: "",
     });
-  }, [capacity, participants]);
+  }, [data]);
 
   useEffect(() => {
     const initialInputs = getInputsByParticipant();
     setInputs(initialInputs);
   }, [getInputsByParticipant]);
 
-  const handleInputClick = (username: string) => {
+  const handleInputClick = (memberId: string) => {
+    if (!data) return;
+
+    const { hostId } = data;
     router.push({
       pathname: "/search",
       query: {
-        id: router.query.groupId,
-        owner: username === owner,
+        groupId: router.query.groupId,
+        host: memberId === hostId,
       },
     });
   };
@@ -126,19 +143,25 @@ const GroupPage = ({
 
   const handleSearch = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    if (!data) return;
+    const { participants, capacity } = data;
 
     if (participants.length !== capacity) {
       toast.error("아직 주소를 다 못 받았어요..");
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     // **TODO: 중간지점 찾기 api 호출
     // **TODO: 모임 삭제 api 호출
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
     await sleep(1000);
-    setIsLoading(false);
+    setIsSubmitting(false);
   };
+
+  if (isError) {
+    return <p>There was an Error</p>;
+  }
 
   return (
     <>
@@ -156,26 +179,32 @@ const GroupPage = ({
               justifyContent: "space-between",
               marginBottom: "1rem",
             }}>
-            <CustomIconButton>
-              <InsertLink onClick={handleLink} />
+            <CustomIconButton onClick={handleLink}>
+              <InsertLink />
             </CustomIconButton>
-            <CustomIconButton>
-              <Refresh onClick={handleRefresh} />
+            <CustomIconButton onClick={handleRefresh}>
+              <Refresh />
             </CustomIconButton>
           </Box>
+          {isLoading && (
+            <Box
+              sx={{ display: "flex", width: "100%", justifyContent: "center" }}>
+              <CircularProgress />
+            </Box>
+          )}
           <form>
             <Stack spacing={1.5}>
               {inputs &&
-                inputs.map(({ username, stationName }, index) => (
+                inputs.map(({ nickname, stationName, memberId }, index) => (
                   <div key={index}>
                     <FormInput
                       index={index}
                       address={stationName}
                       placeholder='주소가 아직 없어요...'
-                      onClick={() => handleInputClick(username)}
+                      onClick={() => handleInputClick(memberId)}
                     />
                     <InputLabel>
-                      {stationName ? `${username}이 입력했습니다` : ""}
+                      {stationName ? `${nickname}이 입력했습니다` : ""}
                     </InputLabel>
                   </div>
                 ))}
@@ -194,7 +223,11 @@ const GroupPage = ({
                 size='large'
                 type='submit'
                 onClick={handleSearch}>
-                {isLoading ? <CircularProgress size='2rem' /> : "중간지점 찾기"}
+                {isSubmitting ? (
+                  <CircularProgress size='2rem' />
+                ) : (
+                  "중간지점 찾기"
+                )}
               </CustomButton>
             </Stack>
           </form>
@@ -225,38 +258,3 @@ const CustomIconButton = styled(IconButton)`
     font-size: 2rem;
   }
 `;
-
-export const getServerSideProps = async ({
-  params,
-}: GetServerSidePropsContext) => {
-  // 404 Page if no params
-  if (!params) {
-    return {
-      notFound: true,
-    };
-  }
-
-  const groupId = params.groupId;
-  // **TODO: 모임 정보 api 호출 endpoint로 교체
-  const res = await fetch(
-    `https://63fb17c14e024687bf71cf31.mockapi.io/group/${groupId}`
-  );
-
-  const data: GroupDetailResponse = await res.json();
-
-  // Redirect home if no data
-  if (!data) {
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
-
-  return {
-    props: {
-      data,
-    },
-  };
-};

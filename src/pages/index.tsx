@@ -51,7 +51,8 @@ export default function Home() {
       <Main text={MAIN_TEXT}>
         <AddressForm />
       </Main>
-      <Button onClick={handleOpenModal}>Make Group</Button>
+      <Link href='/group/bb644fe4-8f34-4775-882a-c1d2ee01f322'>TEST GROUP</Link>
+      <Button onClick={handleOpenModal}>Open Modal</Button>
       <div>
         <Link href='/search'>search</Link>
       </div>
