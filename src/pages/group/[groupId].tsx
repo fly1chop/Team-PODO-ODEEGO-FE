@@ -38,7 +38,7 @@ const GroupPage = () => {
   const { openModal } = useModal();
   const token = useRecoilValue(tokenRecoilState);
   const { groupId } = router.query;
-  const { data, isLoading, isError } = useGroup(
+  const { data, isLoading, isError, isFetching } = useGroup(
     groupId as string,
     token as string
   );
@@ -76,6 +76,7 @@ const GroupPage = () => {
   }, [getInputsByParticipant]);
 
   const handleInputClick = (memberId: string) => {
+    if (isFetching || isSubmitting) return;
     if (!data) return;
 
     const { hostId } = data;
@@ -100,7 +101,7 @@ const GroupPage = () => {
         <p>링크를 공유해서 주소를 입력받으세요</p>
         <FormInput
           index={0}
-          address={`/search/${router.query.groupId}`}
+          address={`/search?groupId=${router.query.groupId}`}
           onClick={handleCopy}
         />
       </div>
