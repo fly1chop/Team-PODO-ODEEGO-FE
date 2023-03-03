@@ -1,3 +1,5 @@
+import { GroupDetailResponse } from "@/types/api/group";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import HTTP from "./config/axios-instance";
 
@@ -9,8 +11,6 @@ export const GroupsApi = {
         // - axios instance에 accessToken 추가 : refreshToken이 있어서... 잠시 보류
         url: `/v1/groups?memberId=${memberId}`,
       });
-
-      console.log(data);
 
       return data;
     } catch (e) {
@@ -41,4 +41,41 @@ export const GroupsApi = {
       }
     }
   },
+  getGroup: async (groupId: string, token: string) => {
+    try {
+      const { data } = await HTTP.get<GroupDetailResponse>({
+        url: `/v1/groups/${groupId}`,
+        headers: {
+          Authorization: token,
+        },
+      });
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  deleteGroup: async (groupId: string, token: string) => {
+    try {
+      const { data } = await HTTP.delete({
+        url: `/v1/groups/delete?groupId=${groupId}`,
+        headers: {
+          Authorization: token,
+        },
+      });
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
+
+const useGroup = (groupId: string, token: string) => {
+  return useQuery(["group"], () => GroupsApi.getGroup(groupId, token), {
+    refetchOnMount: true,
+    staleTime: 10000,
+  });
+};
+
+export { useGroup };
