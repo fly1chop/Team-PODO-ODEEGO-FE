@@ -56,7 +56,7 @@ const { ERROR_400 } = STATUS_CODE;
 
 const { SEARCH, LOGIN, MAP, GROUP } = ROUTES;
 
-export default function Home() {
+export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [groupId, setGroupId] = useState("");
   const setMidPointResponse = useSetRecoilState(MidPointState);
@@ -134,7 +134,7 @@ export default function Home() {
 
     try {
       const { memberId } = await TestApi.postDummyUser(nickname);
-
+      console.log(memberId);
       setToken(memberId);
     } catch (e) {
       console.error(e);
@@ -165,7 +165,15 @@ export default function Home() {
   const handleButtonClickMiddlePointSubmit = async () => {
     if (isLoading) return;
 
-    const notEmptyAddressList = addressList.filter((a) => a.stationName !== "");
+    const notEmptyAddressList = addressList
+      .filter((a) => a.stationName !== "")
+      .map((a) => {
+        return {
+          stationName: a.stationName.split(" ")[0],
+          lat: a.lat,
+          lng: a.lng,
+        };
+      });
     if (notEmptyAddressList.length < 2) {
       toast.error(ERROR_MISSING_START_POINT);
       setIsLoading(false);
@@ -175,7 +183,6 @@ export default function Home() {
     setIsLoading(true);
 
     const data = await MidPointApi.postMidPoint(notEmptyAddressList);
-    await (() => new Promise((r) => setTimeout(r, 3000)))();
 
     setIsLoading(false);
 
@@ -183,15 +190,14 @@ export default function Home() {
       toast.error(ERROR_OUT_OF_BOUND);
     } else if (data.start.length < 2) {
       toast.error(ERROR_DUPLICATE_START_POINT);
-    } else {
+
       //TODO
       // - 지우기
       console.log(data);
       setMidPointResponse(data);
+      setAddressList(notEmptyAddressList);
       router.push(`${MAP}`);
     }
-
-    setAddressList(notEmptyAddressList);
   };
 
   const { run: debounceMidPoint } = useTimeoutFn({

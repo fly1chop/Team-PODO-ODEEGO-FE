@@ -11,7 +11,6 @@ export default async function handler(
   // - groups api로 바꿀 것
   const { memberId } = req.query;
   const requestUrl = `${API_END_POINT}/api/v1/groups?member-id=${memberId}`;
-  console.log(`API routes(/api/v1/group?member-id=): ${requestUrl}`);
 
   try {
     const { data } = await axios({

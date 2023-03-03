@@ -9,8 +9,6 @@ export default async function handler(
 ) {
   const requestUrl = `${API_END_POINT}/api/v1/mid-points/search`;
   const addressList = req.body;
-  console.log(`API routes(/api/v1/mid-points/search): ${requestUrl}`);
-  console.log(addressList);
 
   try {
     const { data } = await axios({
@@ -20,7 +18,6 @@ export default async function handler(
         stations: [...addressList.stations],
       },
     });
-
     res.status(200).json(data);
   } catch (e) {
     res.status(400).send({ error: "Error: Out of bound", status: 400 });

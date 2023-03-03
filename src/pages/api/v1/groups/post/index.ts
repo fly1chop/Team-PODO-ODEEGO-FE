@@ -12,7 +12,6 @@ export default async function handler(
   const { memberId } = req.query;
   const { capacity } = req.body;
   const requestUrl = `${API_END_POINT}/api/test/groups?member-id=${memberId}`;
-  console.log(`API routes(/api/test/groups): ${requestUrl}`);
 
   try {
     const response = await axios({
