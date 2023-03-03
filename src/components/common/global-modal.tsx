@@ -36,7 +36,6 @@ const _Modal = ({
 
   const close = () => {
     if (isLoading) return;
-    if (handleClose) handleClose();
 
     setShow(false);
     closeModal();
@@ -51,7 +50,7 @@ const _Modal = ({
   };
 
   const onCancel = () => {
-    // if (handleClose) handleClose();
+    if (handleClose) handleClose();
     close();
   };
 

@@ -17,10 +17,13 @@ import {
 import { useRouter } from "next/router";
 import { MouseEvent, useCallback, useEffect, useState } from "react";
 import { toast, Toaster } from "react-hot-toast";
-import { useRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { tokenRecoilState } from "@/recoil/token-recoil";
 import { useRecoilValue } from "recoil";
-import { fetchGroup, useGroup } from "../api/group";
+import { GroupsApi, useGroup } from "@/axios/groups";
+import { MidPointApi } from "@/axios/mid-point";
+import { searchProps } from "@/types/search-props";
+import { MidPointState } from "@/recoil/midpoint-state";
 
 interface InputState {
   memberId: string;
@@ -35,9 +38,11 @@ const GroupPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inputs, setInputs] = useState<InputState[]>();
   const [isFirstVisit, setIsFirstVisit] = useRecoilState(isFirstVisitState);
+  const setMidPointResponse = useSetRecoilState(MidPointState);
   const { openModal } = useModal();
   const token = useRecoilValue(tokenRecoilState);
   const groupId = router.query.groupId as string;
+  console.log(groupId);
   const { data, isLoading, isError, isFetching } = useGroup(groupId, token);
 
   const getInputsByParticipant = useCallback(() => {
@@ -123,9 +128,8 @@ const GroupPage = () => {
   };
 
   const handleRefresh = async () => {
-    // TODO: fetch 모임 상세 정보 api
     setIsSubmitting(true);
-    await fetchGroup(groupId, token);
+    await GroupsApi.getGroup(groupId, token);
     getInputsByParticipant();
     setIsSubmitting(false);
   };
@@ -137,8 +141,8 @@ const GroupPage = () => {
         confirm: "계속",
         close: "취소",
       },
-      handleConfirm: () => {
-        // deleteGroup(groupId, token);
+      handleConfirm: async () => {
+        await GroupsApi.deleteGroup(groupId, token);
         setIsFirstVisit(null);
         router.push("/");
       },
@@ -156,10 +160,13 @@ const GroupPage = () => {
     }
 
     setIsSubmitting(true);
-    // **TODO: 중간지점 찾기 api 호출
-    // deleteGroup(groupId, token);
-    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-    await sleep(1000);
+    if (!inputs) return;
+    const filteredInputs: searchProps[] = inputs.map((input) => {
+      return { stationName: input.stationName, lat: input.lat, lng: input.lng };
+    });
+    const midpoints = await MidPointApi.postMidPoint(filteredInputs);
+    setMidPointResponse(midpoints);
+    await GroupsApi.deleteGroup(groupId, token);
     setIsSubmitting(false);
   };
 
