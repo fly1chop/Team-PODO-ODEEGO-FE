@@ -194,6 +194,7 @@ export default function HomePage() {
       //TODO
       // - 지우기
       console.log(data);
+    } else {
       setMidPointResponse(data);
       setAddressList(notEmptyAddressList);
       router.push(`${MAP}`);

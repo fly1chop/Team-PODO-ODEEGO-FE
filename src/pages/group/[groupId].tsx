@@ -20,7 +20,7 @@ import { toast, Toaster } from "react-hot-toast";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { tokenRecoilState } from "@/recoil/token-recoil";
 import { useRecoilValue } from "recoil";
-import { GroupsApi, useGroup } from "@/axios/groups";
+import { useGroup, GroupsApi } from "@/axios/groups";
 import { MidPointApi } from "@/axios/mid-point";
 import { searchProps } from "@/types/search-props";
 import { MidPointState } from "@/recoil/midpoint-state";
@@ -42,7 +42,6 @@ const GroupPage = () => {
   const { openModal } = useModal();
   const token = useRecoilValue(tokenRecoilState);
   const groupId = router.query.groupId as string;
-  console.log(groupId);
   const { data, isLoading, isError, isFetching } = useGroup(groupId, token);
 
   const getInputsByParticipant = useCallback(() => {
