@@ -35,9 +35,8 @@ const SearchInput = () => {
 
     const obj: searchProps = {
       stationName: val.place_name,
-      lat: val.y,
-      lng: val.x,
-      address: val.address_name,
+      lat: +val.y,
+      lng: +val.x,
     };
     setRecoilData((prev: searchProps[]) => [
       ...prev.slice(0, id),
