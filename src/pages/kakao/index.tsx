@@ -122,7 +122,7 @@ const Kakao = () => {
     } catch (e) {
       alert(e);
     }
-  }, [router]);
+  }, [authCode, router]);
 
   console.log(userImage);
 

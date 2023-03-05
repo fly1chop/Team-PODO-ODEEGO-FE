@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { globalStyles } from "@/styles/global";
 import type { AppProps } from "next/app";
 import React from "react";
