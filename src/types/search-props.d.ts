@@ -17,6 +17,5 @@ interface searchProps {
   stationName: string;
   lat: number;
   lng: number;
-}
 
 export type { searchOriginProps, searchProps };
