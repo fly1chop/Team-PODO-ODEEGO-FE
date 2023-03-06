@@ -86,7 +86,7 @@ export default function HomePage() {
       close: CLOSE_TEXT,
     },
     handleConfirm: async () => {
-      const count = getLocalStorage(COUNT, "");
+      const count = getLocalStorage(COUNT);
       if (count === "") {
         toast.error(ERROR_UNSELECT_PEOPLE_COUNT);
         return;
@@ -117,9 +117,12 @@ export default function HomePage() {
       if (!hasAccessToken) return "";
 
       //TODO 실제 모임조회 api로 바꾸기
-      const data = await GroupsApi.getAll(token);
-      const groupId = data?.groups?.[0]?.groupId || "";
-
+      // const data = await GroupsApi.getAll(token);
+      const data = "실제 모임 조회 api";
+      console.log(data);
+      //TODO Axios 인스턴스 토큰 구현안되서 계속 터지고 있음 (주석처리)
+      // const groupId = data?.groups?.[0]?.groupId || "";
+      const groupId = "0";
       setGroupId(groupId);
       // setGroupId("");
       setLocalStorage(COUNT, "");
@@ -149,6 +152,7 @@ export default function HomePage() {
     if (isLoading) return;
     if (!hasAccessToken) {
       openModal(loginModalConfig);
+
       return;
     }
     if (groupId) {
