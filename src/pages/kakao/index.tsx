@@ -1,14 +1,13 @@
 import { useRouter } from "next/router";
 import { useEffect } from "react";
-import SignUpSearchInput from "@/components/signup/signup-search";
 import styled from "@emotion/styled";
-import { COLORS } from "@/constants/css";
-
-import { accessTokenStorage } from "@/utils/storage";
+import { accessTokenStorage, logoutTokenStorage } from "@/utils/storage";
 import Header from "@/components/layout/header";
 import fetch from "node-fetch";
 import { InferGetServerSidePropsType, GetServerSideProps } from "next";
 import { useAuthQuery } from "@/axios/user";
+import { CircularProgress } from "@mui/material";
+import Main from "@/components/layout/main";
 
 interface TokenResponse {
   tokenResponse: {
@@ -25,7 +24,6 @@ export const getServerSideProps: GetServerSideProps<TokenResponse> = async (
   const loginKakao = `/api/kakao-login`;
 
   const { code: authCode } = context.query;
-  console.log(authCode);
 
   const responseKakao = await fetch(NEXT_PUBLIC_URL + loginKakao, {
     method: "POST",
@@ -36,7 +34,6 @@ export const getServerSideProps: GetServerSideProps<TokenResponse> = async (
   });
 
   const { tokenResponse } = (await responseKakao.json()) as TokenResponse;
-  console.log(tokenResponse);
 
   // const loginAuthUrl = `/api/auth/login`;
 
@@ -60,7 +57,6 @@ const Kakao = (
 ) => {
   const router = useRouter();
   const kakaoAccessToken = props.tokenResponse.access_token;
-
   const { isSuccess, data } = useAuthQuery(kakaoAccessToken);
 
   useEffect(() => {
@@ -68,8 +64,9 @@ const Kakao = (
 
     const { accessToken, memberType } = data;
     accessTokenStorage.set(accessToken);
+    logoutTokenStorage.set(accessToken);
 
-    memberType === "PRE" ? router.replace("/mypage") : router.replace("");
+    memberType === "PRE" ? router.replace("/mypage") : router.replace("/");
   }, [data, isSuccess, router]);
 
   // useEffect(() => {
@@ -94,31 +91,35 @@ const Kakao = (
 
   return (
     <SignUpContainer>
-      <Header token={"props.tokenResponse.access_token"} />
-      <BorderContainer />
-      <SignUpTitle>가까운 지하철역을 입력해주세요. ^^</SignUpTitle>
-      <SignUpSearchInput />
+      <Header token={kakaoAccessToken} />
+      <Main text=''>
+        <Container>
+          <CircularProgress />
+        </Container>
+      </Main>
+      {/* <SignUpTitle>가까운 지하철역을 입력해주세요. ^^</SignUpTitle>
+      <SignUpSearchInput /> */}
     </SignUpContainer>
   );
 };
 export default Kakao;
 
-const SignUpTitle = styled.h1`
-  font-size: 14px;
+const Container = styled.div`
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 50px;
-  margin-bottom: 50px;
 `;
 
-const BorderContainer = styled.div`
-  height: 25px;
-  width: 100%;
-  background-color: ${COLORS.backgroundPrimary};
-  margin-top: -15px;
-  border-radius: 20px 20px 0 0;
-`;
+// const SignUpTitle = styled.h1`
+//   font-size: 14px;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   margin-top: 50px;
+//   margin-bottom: 50px;
+// `;
 
 const SignUpContainer = styled.div`
   width: 43rem;

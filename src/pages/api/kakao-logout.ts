@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 async function getTokenFromKakao(logoutToken: string) {
   try {
-    const tokenUrl = `https://kapi.kakao.com/v1/user/unlink`;
+    const tokenUrl = `https://kapi.kakao.com/v1/user/logout`;
 
     const response: NextApiResponse = await fetch(tokenUrl, {
       method: "POST",
