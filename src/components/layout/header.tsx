@@ -6,14 +6,15 @@ import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
 import { ROUTES } from "@/constants/routes";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-import { getLocalStorage, removeLocalStorage } from "@/utils/storage";
+import { ExitToApp, Login } from "@mui/icons-material";
+import { logoutTokenStorage, accessTokenStorage } from "@/utils/storage";
 import { axiosInstanceWitToken } from "@/axios/instance";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import useModal from "../../hooks/use-modal";
 import fetch from "node-fetch";
 import Cookies from "cookies";
 import { GetServerSidePropsContext } from "next";
+import { IconButton, Tooltip } from "@mui/material";
 
 interface TokenProps {
   token?: string;
@@ -35,7 +36,7 @@ const Header = ({ token }: TokenProps) => {
   const [tokenData, setToken] = useState<string>("");
 
   useEffect(() => {
-    const getToken = getLocalStorage("logoutToken");
+    const getToken = logoutTokenStorage.get();
     if (!getToken) return;
 
     setToken(getToken);
@@ -73,7 +74,7 @@ const Header = ({ token }: TokenProps) => {
   };
 
   const handleClickLogout = async () => {
-    const logoutToken = getLocalStorage("logoutToken");
+    const logoutToken = logoutTokenStorage.get();
     try {
       const kakaoLogoutUrl = `/api/kakao-logout`;
       await fetch(kakaoLogoutUrl, {
@@ -89,9 +90,9 @@ const Header = ({ token }: TokenProps) => {
       const odeegoLogoutUrl = `/api/odeego-leave`;
       const response = await axiosInstanceWitToken.delete(odeegoLogoutUrl);
       setToken("");
-      removeLocalStorage("token");
+      accessTokenStorage.remove();
 
-      removeLocalStorage("logoutToken");
+      logoutTokenStorage.remove();
       router.push(`${ROUTES.HOME}`);
       return response;
     } catch (err) {
@@ -127,8 +128,16 @@ const Header = ({ token }: TokenProps) => {
 
           <HeaderIconWrap>
             <NavbarIcons>
-              <AccountCircleIcon onClick={handleClickMypage} />
-              <ExitToAppIcon onClick={handleClickLogout} />
+              <Tooltip title='마이페이지' arrow>
+                <IconButton onClick={handleClickMypage}>
+                  <AccountCircleIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title='로그아웃' arrow>
+                <IconButton onClick={handleClickLogout}>
+                  <ExitToApp />
+                </IconButton>
+              </Tooltip>
             </NavbarIcons>
           </HeaderIconWrap>
         </>
@@ -139,11 +148,10 @@ const Header = ({ token }: TokenProps) => {
           <HeaderIconWrap>
             <Tooltip title='로그인' arrow>
               <IconButton
-                onClick={handleClickLogin}
                 style={{
                   color: "white",
                 }}>
-                <LoginIcon />
+                <Login />
               </IconButton>
             </Tooltip>
           </HeaderIconWrap>

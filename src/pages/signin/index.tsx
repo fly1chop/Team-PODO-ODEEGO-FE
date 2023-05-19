@@ -2,58 +2,63 @@ import React from "react";
 import styled from "@emotion/styled";
 import Image from "next/image";
 import Header from "@/components/layout/header";
-import { getLocalStorage, removeLocalStorage } from "@/utils/storage";
-import useModal from "../../hooks/use-modal";
 import { useRouter } from "next/router";
-import { ROUTES } from "@/constants";
 import Main from "@/components/layout/main";
 import { Button } from "@mui/material";
 
 const LoginPage = () => {
-  const { openModal } = useModal();
-  const token = getLocalStorage("logoutToken");
-
   const router = useRouter();
+  // const { openModal } = useModal();
+  // const token = getLocalStorage("logoutToken");
 
-  const handleKakaoLogin = () => {
-    if (token) {
-      openModal({
-        children: "이미 로그인 되어있습니다.",
-        btnText: {
-          confirm: "로그아웃",
-          close: "취소",
-        },
-        handleConfirm: async () => {
-          const logoutToken = getLocalStorage("logoutToken");
-          const kakaoLogoutUrl = `/api/kakao-logout`;
-          await fetch(kakaoLogoutUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              logoutToken,
-            }),
-          });
+  // const router = useRouter();
 
-          removeLocalStorage("token");
-          removeLocalStorage("logoutToken");
-          router.push(`${ROUTES.HOME}`);
+  // const handleKakaoLogin = () => {
+  //   if (token) {
+  //     openModal({
+  //       children: "이미 로그인 되어있습니다.",
+  //       btnText: {
+  //         confirm: "로그아웃",
+  //         close: "취소",
+  //       },
+  //       handleConfirm: async () => {
+  //         const logoutToken = getLocalStorage("logoutToken");
+  //         const kakaoLogoutUrl = `/api/kakao-logout`;
+  //         await fetch(kakaoLogoutUrl, {
+  //           method: "POST",
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //           body: JSON.stringify({
+  //             logoutToken,
+  //           }),
+  //         });
 
-          // return response;
-        },
-      });
-    } else {
-      window.Kakao.Auth.authorize({
-        redirectUri:
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:3000/kakao"
-            : process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI,
-      });
-    }
-  };
+  //         removeLocalStorage("token");
+  //         removeLocalStorage("logoutToken");
+  //         router.push(`${ROUTES.HOME}`);
+
+  //         // return response;
+  //       },
+  //     });
+  //   } else {
+  //     window.Kakao.Auth.authorize({
+  //       redirectUri:
+  //         process.env.NODE_ENV === "development"
+  //           ? "http://localhost:3000/kakao"
+  //           : process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI,
+  //     });
+  //   }
+  // };
 
   // test
+
+  const handleKakaoLogin = () => {
+    const kakaoAuthURL = `https://kauth.kakao.com/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY}&redirect_uri=${process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI}&response_type=code`;
+
+    router.push(kakaoAuthURL);
+  };
+
   return (
     <LoginContainer>
       <Header />

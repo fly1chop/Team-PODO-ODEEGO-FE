@@ -1,22 +1,31 @@
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import SignUpSearchInput from "@/components/signup/signup-search";
 import styled from "@emotion/styled";
 import { COLORS } from "@/constants/css";
 
-import { setLocalStorage } from "@/utils/storage";
+import { accessTokenStorage } from "@/utils/storage";
 import Header from "@/components/layout/header";
-
-import { axiosInstanceWitToken } from "@/axios/instance";
 import fetch from "node-fetch";
-import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
+import { InferGetServerSidePropsType, GetServerSideProps } from "next";
+import { useAuthQuery } from "@/axios/user";
 
-export async function getServerSideProps(context: GetServerSidePropsContext) {
+interface TokenResponse {
+  tokenResponse: {
+    access_token: string;
+    refresh_token: string;
+  };
+}
+
+export const getServerSideProps: GetServerSideProps<TokenResponse> = async (
+  context
+) => {
   const { NEXT_PUBLIC_URL } = process.env;
 
   const loginKakao = `/api/kakao-login`;
 
   const { code: authCode } = context.query;
+  console.log(authCode);
 
   const responseKakao = await fetch(NEXT_PUBLIC_URL + loginKakao, {
     method: "POST",
@@ -26,9 +35,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     body: JSON.stringify({ authCode }),
   });
 
-  const result = await responseKakao.json();
-
-  const { tokenResponse } = result;
+  const { tokenResponse } = (await responseKakao.json()) as TokenResponse;
+  console.log(tokenResponse);
 
   // const loginAuthUrl = `/api/auth/login`;
 
@@ -40,44 +48,53 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   //   body: JSON.stringify(tokenResponse),
   // });
 
-  console.log(tokenResponse.access_token);
-
   return {
     props: {
       tokenResponse,
     },
   };
-}
+};
 
 const Kakao = (
   props: InferGetServerSidePropsType<typeof getServerSideProps>
 ) => {
   const router = useRouter();
-  const { code: authCode } = router.query;
+  const kakaoAccessToken = props.tokenResponse.access_token;
+
+  const { isSuccess, data } = useAuthQuery(kakaoAccessToken);
 
   useEffect(() => {
-    const fetchKaokaoUserData = async () => {
-      try {
-        if (authCode) {
-          setLocalStorage("logoutToken", props.tokenResponse.access_token);
-          if (window.performance && performance.navigation.type !== 1) {
-            const loginBackendUrl = `${process.env.NEXT_PUBLIC_API_END_POINT_ODEEGO}/api/v1/auth/user/me`;
-            const { data } = await axiosInstanceWitToken.post(loginBackendUrl);
-            setLocalStorage("token", data.accessToken);
-          } else {
-            console.error("The page is reloaded");
-          }
-        }
-      } catch (err) {
-        throw new Error((err as Error).message);
-      }
-    };
-    fetchKaokaoUserData();
-  }, [authCode, router]);
+    if (!isSuccess) return;
+
+    const { accessToken, memberType } = data;
+    accessTokenStorage.set(accessToken);
+
+    memberType === "PRE" ? router.replace("/mypage") : router.replace("");
+  }, [data, isSuccess, router]);
+
+  // useEffect(() => {
+  //   const fetchKaokaoUserData = async () => {
+  //     try {
+  //       if (authCode) {
+  //         logoutTokenStorage.get(props.tokenResponse.access_token);
+  //         if (window.performance && performance.navigation.type !== 1) {
+  //           const loginBackendUrl = `${process.env.NEXT_PUBLIC_API_END_POINT_ODEEGO}/api/v1/auth/user/me`;
+  //           const { data } = await axiosInstanceWitToken.post(loginBackendUrl);
+  //           accessTokenStorage.set(data.accessToken);
+  //         } else {
+  //           console.error("The page is reloaded");
+  //         }
+  //       }
+  //     } catch (err) {
+  //       throw new Error((err as Error).message);
+  //     }
+  //   };
+  //   fetchKaokaoUserData();
+  // }, [authCode, router]);
 
   return (
     <SignUpContainer>
-      <Header token={props.tokenResponse.access_token} />
+      <Header token={"props.tokenResponse.access_token"} />
       <BorderContainer />
       <SignUpTitle>가까운 지하철역을 입력해주세요. ^^</SignUpTitle>
       <SignUpSearchInput />
